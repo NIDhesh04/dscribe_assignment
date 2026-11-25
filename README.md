@@ -84,9 +84,6 @@ Open `http://localhost:5173` in your browser.
 
 ## Screenshots
 
-> Add screenshots of the desktop view, mobile view, and Add/Edit Patient form here after deploying.
-
-
 ![Desktop View](./screenshots/desktop.png)
 ![Add Patient Form](./screenshots/add-patient.png)
 ![Mobile View](./screenshots/mobile.png)
