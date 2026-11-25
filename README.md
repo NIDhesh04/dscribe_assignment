@@ -4,8 +4,8 @@ A web application for hospital staff to manage admitted and discharged patients.
 
 ## Live Link
 
-- **Frontend:** `<add your deployed frontend URL here>`
-- **Backend API:** `<add your deployed backend URL here>`
+- **Frontend:** https://dscribe-assignment.vercel.app/
+- **Backend API:** https://dscribe-assignment.onrender.com
 
 ## Tech Stack
 
