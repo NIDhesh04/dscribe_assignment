@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
-import { fetchPatients } from "./api";
+import {
+  createPatient,
+  deletePatient,
+  dischargePatient,
+  fetchPatients,
+  updatePatient,
+} from "./api";
+import ConfirmModal from "./components/ConfirmModal";
 import FilterBar from "./components/FilterBar";
+import PatientForm from "./components/PatientForm";
 import PatientList from "./components/PatientList";
 
 const EMPTY_FILTERS = {
@@ -15,6 +23,10 @@ export default function App() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingPatient, setEditingPatient] = useState(null);
+  const [deletingPatient, setDeletingPatient] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function loadPatients(activeFilters = filters) {
     setLoading(true);
@@ -44,6 +56,56 @@ export default function App() {
     setFilters(EMPTY_FILTERS);
   }
 
+  function handleOpenAdd() {
+    setEditingPatient(null);
+    setShowForm(true);
+  }
+
+  function handleOpenEdit(patient) {
+    setEditingPatient(patient);
+    setShowForm(true);
+  }
+
+  function handleCloseForm() {
+    setShowForm(false);
+    setEditingPatient(null);
+  }
+
+  async function handleSavePatient(payload) {
+    if (editingPatient) {
+      await updatePatient(editingPatient.id, payload);
+    } else {
+      await createPatient(payload);
+    }
+    handleCloseForm();
+    loadPatients(filters);
+  }
+
+  async function handleDischarge(patient) {
+    setError("");
+    try {
+      await dischargePatient(patient.id);
+      loadPatients(filters);
+    } catch (err) {
+      setError(err.message || "Could not discharge patient");
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingPatient) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await deletePatient(deletingPatient.id);
+      setDeletingPatient(null);
+      loadPatients(filters);
+    } catch (err) {
+      setError(err.message || "Could not delete patient");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const admittedCount = patients.filter((p) => p.status === "Admitted").length;
   const dischargedCount = patients.filter((p) => p.status === "Discharged").length;
 
@@ -54,6 +116,9 @@ export default function App() {
           <h1>Patient Admission Management</h1>
           <p className="subtitle">Manage admitted and discharged hospital patients</p>
         </div>
+        <button type="button" className="btn btn-primary" onClick={handleOpenAdd}>
+          + Add Patient
+        </button>
       </header>
 
       <div className="stats-row">
@@ -82,10 +147,28 @@ export default function App() {
       <PatientList
         patients={patients}
         loading={loading}
-        onEdit={() => {}}
-        onDelete={() => {}}
-        onDischarge={() => {}}
+        onEdit={handleOpenEdit}
+        onDelete={setDeletingPatient}
+        onDischarge={handleDischarge}
       />
+
+      {showForm && (
+        <PatientForm
+          initialData={editingPatient}
+          onSubmit={handleSavePatient}
+          onClose={handleCloseForm}
+        />
+      )}
+
+      {deletingPatient && (
+        <ConfirmModal
+          title="Delete Patient"
+          message={`Are you sure you want to delete ${deletingPatient.name}? This action cannot be undone.`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingPatient(null)}
+          loading={deleting}
+        />
+      )}
     </div>
   );
 }
