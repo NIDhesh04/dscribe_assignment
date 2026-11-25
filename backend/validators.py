@@ -1,41 +1,11 @@
 import re
 from datetime import date, datetime
-
-GENDERS = ["Male", "Female", "Other"]
-
-WARDS = [
-    "General Ward",
-    "ICU",
-    "Emergency",
-    "Pediatric Ward",
-    "Maternity Ward",
-    "Surgical Ward",
-]
-
-DEPARTMENTS = [
-    "General Medicine",
-    "Cardiology",
-    "Neurology",
-    "Orthopedics",
-    "Pediatrics",
-    "Surgery",
-]
-
-DOCTORS = [
-    "Dr. Ananya Sharma",
-    "Dr. Rajesh Patel",
-    "Dr. Meera Nair",
-    "Dr. Vikram Mehta",
-    "Dr. Suresh Rao",
-    "Dr. Kavita Verma",
-]
-
-STATUSES = ["Admitted", "Discharged"]
+from constants import DEPARTMENTS, DOCTORS, GENDERS, STATUSES, WARDS
 
 NAME_REGEX = re.compile(r"^[A-Za-z ]+$")
 
 
-def validate_patient(data, is_update=False):
+def validate_patient(data):
     if not isinstance(data, dict):
         return None, {"body": "Invalid JSON payload"}
 
@@ -55,15 +25,13 @@ def validate_patient(data, is_update=False):
     elif isinstance(raw_age, bool):
         errors["age"] = "Age must be a number between 0 and 120"
     else:
-        try:
-            age_str = str(raw_age).strip()
-            if not re.fullmatch(r"-?\d+", age_str):
-                raise ValueError
+        age_str = str(raw_age).strip()
+        if not re.fullmatch(r"-?\d+", age_str):
+            errors["age"] = "Age must be a valid whole number between 0 and 120"
+        else:
             age = int(age_str)
             if age < 0 or age > 120:
                 errors["age"] = "Age must be between 0 and 120"
-        except (ValueError, TypeError):
-            errors["age"] = "Age must be a valid whole number between 0 and 120"
 
     gender = data.get("gender")
     if not gender or gender not in GENDERS:
@@ -103,7 +71,7 @@ def validate_patient(data, is_update=False):
     if errors:
         return None, errors
 
-    cleaned = {
+    return {
         "name": " ".join(name.split()),
         "age": age,
         "gender": gender,
@@ -112,5 +80,4 @@ def validate_patient(data, is_update=False):
         "doctor": doctor,
         "admission_date": admission_date,
         "status": status,
-    }
-    return cleaned, None
+    }, None
